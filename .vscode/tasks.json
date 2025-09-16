@@ -1,0 +1,32 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Compilar Allegro",
+            "type": "shell",
+            "command": "clang",
+            "args": [
+                "-I/Users/emellydapaixaolima/Documents/AllegroLib/include",
+                "-I${workspaceFolder}/include",
+                "-L/Users/emellydapaixaolima/Documents/AllegroLib/lib",
+                "-Wl,-rpath,/Users/emellydapaixaolima/Documents/AllegroLib/lib",
+                "-lallegro",
+                "-lallegro_main",
+                "-lallegro_video",
+                "-lallegro_image",
+                "-lallegro_primitives",
+                "-lallegro_font",
+                "-lallegro_ttf",
+                "-lallegro_audio",
+                "-lallegro_acodec",
+                "${workspaceFolder}/src/*.c",
+                "-o",
+                "${workspaceFolder}/src/game"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
