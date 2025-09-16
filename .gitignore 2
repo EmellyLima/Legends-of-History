@@ -1,6 +1,0 @@
-bin/
-obj/
-*.o
-*.DS_Store
-allegro5/
-allegro5/
