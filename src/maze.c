@@ -1,8 +1,41 @@
-// src/maze.c
 #include "maze.h"
-#include <stdio.h>
+#include "config.h" 
+#include <allegro5/allegro_primitives.h>
 
-void generate_maze(int rows, int cols) {
-    // Exemplo simples só pra testar
-    printf("Gerando labirinto de %d linhas e %d colunas...\n", rows, cols);
+int mapa[LINHAS][COLUNAS] = {
+    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+    {1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,0,0,1},
+    {1,0,1,1,1,0,1,0,1,0,1,0,1,1,1,0,1,0,1,1},
+    {1,0,1,0,0,0,1,0,1,0,0,0,0,0,1,0,1,0,0,1},
+    {1,0,1,0,1,1,1,0,1,1,1,1,1,0,1,0,1,1,0,1},
+    {1,0,0,0,1,0,0,0,0,0,0,0,1,0,1,0,0,0,0,1},
+    {1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,0,1,1},
+    {1,0,0,0,1,0,0,0,0,0,1,0,1,0,0,0,1,0,0,1},
+    {1,0,1,1,1,1,1,0,1,0,1,0,1,1,1,0,1,1,0,1},
+    {1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1},
+    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+};
+
+void maze_init() {
+    
+}
+
+void maze_draw() {
+    for (int i = 0; i < LINHAS; i++) {
+        for (int j = 0; j < COLUNAS; j++) {
+            if (mapa[i][j] == 1) {
+                al_draw_filled_rectangle(
+                    j * TAM, i * TAM,
+                    j * TAM + TAM, i * TAM + TAM,
+                    al_map_rgb(80, 80, 80)
+                );
+            }
+        }
+    }
+}
+
+int maze_is_free(int x, int y) {
+    if (x < 0 || x >= COLUNAS || y < 0 || y >= LINHAS)
+        return 0;
+    return mapa[y][x] == 0;
 }

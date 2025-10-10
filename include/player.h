@@ -1,16 +1,12 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include <allegro5/allegro.h>
-
 typedef struct {
-    float x, y;
-    float speed;
-    ALLEGRO_BITMAP *sprite;
+    int x, y;
 } Player;
 
-void init_player(Player *p);
-void update_player(Player *p, ALLEGRO_KEYBOARD_STATE *key_state);
-void draw_player(Player *p);
+void player_init(Player *p, int start_x, int start_y);
+void player_update(Player *p, int next_x, int next_y);
+void player_draw(Player *p);
 
 #endif

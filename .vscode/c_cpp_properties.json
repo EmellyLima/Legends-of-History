@@ -4,16 +4,10 @@
             "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/Users/emellydapaixaolima/Documents/AllegroLib/include"
-            ],
-            "defines": [],
-            "macFrameworkPath": [
-                "/System/Library/Frameworks",
-                "/Library/Frameworks"
+                "/opt/homebrew/opt/allegro/include"
             ],
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c17",
-            "cppStandard": "c++17",
             "intelliSenseMode": "macos-clang-x64"
         }
     ],

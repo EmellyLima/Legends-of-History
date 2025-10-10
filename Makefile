@@ -1,42 +1,27 @@
-# Compilador
-CC = clang
-
-# Diretórios
 SRC_DIR = src
-OBJ_DIR = obj
-BIN_DIR = bin
+INC_DIR = include
+BIN_DIR = build
 
-# Caminhos do vcpkg
-VCPKG_INCLUDE = /Users/emellydapaixaolima/vcpkg/installed/x64-osx/include
-VCPKG_LIB = /Users/emellydapaixaolima/vcpkg/installed/x64-osx/lib
+CC = gcc
+CFLAGS = -Wall -I$(INC_DIR) `pkg-config --cflags allegro-5 allegro_image-5 allegro_font-5 allegro_ttf-5 allegro_primitives-5`
+LDFLAGS = `pkg-config --libs allegro-5 allegro_image-5 allegro_font-5 allegro_ttf-5 allegro_primitives-5`
 
-# Flags
-CFLAGS = -Wall -std=c99 -I$(VCPKG_INCLUDE)
-LDFLAGS = -L$(VCPKG_LIB) -lallegro -lallegro_main -lallegro_font -lallegro_ttf -lallegro_primitives -lallegro_image -lallegro_audio -lallegro_acodec
+SOURCES = $(wildcard $(SRC_DIR)/*.c)
+OBJECTS = $(SOURCES:$(SRC_DIR)/%.c=$(BIN_DIR)/%.o)
+TARGET = legends
 
-# Arquivos fonte e objetos
-SRC = $(wildcard $(SRC_DIR)/*.c)
-OBJ = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRC))
-EXEC = $(BIN_DIR)/legends
+all: $(TARGET)
 
-# Regra principal
-all: $(BIN_DIR) $(OBJ_DIR) $(EXEC)
+$(TARGET): $(OBJECTS)
+	@mkdir -p $(BIN_DIR)
+	$(CC) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
 
-$(EXEC): $(OBJ)
-	$(CC) $(OBJ) -o $@ $(LDFLAGS)
-
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+$(BIN_DIR)/%.o: $(SRC_DIR)/%.c
+	@mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BIN_DIR):
-	mkdir -p $(BIN_DIR)
-
-$(OBJ_DIR):
-	mkdir -p $(OBJ_DIR)
-
 clean:
-	rm -rf $(OBJ_DIR) $(BIN_DIR)
-	mkdir -p $(OBJ_DIR)
+	rm -rf $(BIN_DIR) $(TARGET)
 
-clean:
-	rm -rf $(OBJ_DIR) $(BIN_DIR)
+run: all
+	./$(TARGET)

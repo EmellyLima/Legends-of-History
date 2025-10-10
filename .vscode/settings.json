@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "enemies.h": "c"
+        "enemies.h": "c",
+        "allegro_primitives.h": "c"
     }
 }

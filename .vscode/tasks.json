@@ -1,53 +1,37 @@
-{
-    "version": "2.0.0",
+"version": "2.0.0",
     "tasks": [
         {
-            "label": "Compilar Allegro",
+            "label": "Compilar Jogo (Allegro)",
             "type": "shell",
             "command": "clang",
             "args": [
-                "-I/Users/emellydapaixaolima/Documents/AllegroLib/include",
-                "-I${workspaceFolder}/include",
-                "-L/Users/emellydapaixaolima/Documents/AllegroLib/lib",
-                "-Wl,-rpath,/Users/emellydapaixaolima/Documents/AllegroLib/lib",
+                "-Wall",
+                "-g",
+                "-x", "c",
+                "-Iinclude",
+                "-I/opt/homebrew/opt/allegro/include",
+
+                "-L/opt/homebrew/opt/allegro/lib",
+
+                "-o",
+                "build/meu_jogo",
+
+                "src/*.c",
+
                 "-lallegro",
-                "-lallegro_main",
-                "-lallegro_video",
-                "-lallegro_image",
+                "-lallegro_main", // <<< ADICIONE ESTA LINHA AQUI
                 "-lallegro_primitives",
+                "-lallegro_image",
                 "-lallegro_font",
                 "-lallegro_ttf",
                 "-lallegro_audio",
                 "-lallegro_acodec",
-                "${workspaceFolder}/src/*.c",
-                "-o",
-                "${workspaceFolder}/src/game"
+
+                "-framework", "Foundation",
+                "-framework", "Cocoa",
+                "-framework", "OpenGL"
             ],
-            "group": "build"
-        },
-        {
-            "type": "cppbuild",
-            "label": "C/C++: clang arquivo de build ativo",
-            "command": "/usr/bin/clang",
-            "args": [
-                "-fcolor-diagnostics",
-                "-fansi-escape-codes",
-                "-g",
-                "${file}",
-                "-o",
-                "${fileDirname}/${fileBasenameNoExtension}"
-            ],
-            "options": {
-                "cwd": "${fileDirname}"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            },
-            "detail": "Tarefa gerada pelo Depurador."
+            // ... resto do arquivo
         }
     ]
 }
