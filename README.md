@@ -101,9 +101,9 @@ make clean
 
 ## Créditos
 
-**Autora:** Emelly Lima  
+**Autora:** Emelly Lima, Lucas Parisi, Mariana Kajita
 **Curso:** Ciência da Computação  
-**Instituição:** [Nome da Instituição]  
+**Instituição:** Centro universitário Senac  
 **Período:** 2º semestre
 
 ---
