@@ -58,10 +58,10 @@ Legends-of-History/
 
 | Ação | Tecla |
 |------|--------|
-| Mover para cima | ↑ |
-| Mover para baixo | ↓ |
-| Mover para esquerda | ← |
-| Mover para direita | → |
+| Mover para cima | W |
+| Mover para baixo | S |
+| Mover para esquerda | A |
+| Mover para direita | D |
 | Confirmar / Iniciar | Enter |
 | Sair do jogo | Esc |
 
