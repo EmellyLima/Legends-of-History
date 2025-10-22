@@ -29,6 +29,8 @@ void maze2_load(int data[MAZE_ROWS][MAZE_COLS]);
 void maze3_load(int data[MAZE_ROWS][MAZE_COLS]);
 void maze4_load(int data[MAZE_ROWS][MAZE_COLS]);
 
+void game_loop(const char *avatar_path);
+
 #endif
 
 

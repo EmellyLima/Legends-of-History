@@ -1,50 +1,32 @@
+TARGET = bin/LegendsOfHistory
 CC = gcc
-SRC_DIR = src
-BIN_DIR = bin
-INCLUDE_DIR = include
-UNAME_S := $(shell uname -s)
+INCLUDES = -Iinclude -I/opt/homebrew/include -I/opt/homebrew/opt/allegro/include
+CFLAGS = -Wall -g -DALLEGRO_UNSTABLE -DALLEGRO_USE_CONSOLE
+LIBS = -lallegro -lallegro_main -lallegro_primitives -lallegro_image \
+       -lallegro_font -lallegro_ttf -lallegro_audio -lallegro_acodec -lallegro_dialog
 
-CFLAGS = -Wall -g -I$(INCLUDE_DIR) -DALLEGRO_UNSTABLE -DALLEGRO_USE_CONSOLE
-LDFLAGS = -lallegro -lallegro_main -lallegro_primitives -lallegro_image \
-          -lallegro_font -lallegro_ttf -lallegro_audio -lallegro_acodec
+# Diretórios de bibliotecas (para macOS / Linux)
+LDFLAGS = -L/opt/homebrew/lib -L/opt/homebrew/opt/allegro/lib
 
-ifeq ($(UNAME_S), Darwin)
-	CFLAGS += -I/opt/homebrew/include -I/opt/homebrew/opt/allegro/include
-	LDFLAGS += -L/opt/homebrew/lib -L/opt/homebrew/opt/allegro/lib
-	PLATFORM = macOS 
-endif
+OBJS = src/avatar_choice.o src/enemy.o src/game.o src/intro.o src/main.o \
+       src/maze.o src/maze1.o src/maze2.o src/maze3.o src/maze4.o src/menu.o \
+       src/player.o src/portal.o src/quiz.o src/sound.o src/projectile.o
 
-ifeq ($(OS), Windows_NT)
-	CFLAGS += -I"C:/allegro/include"
-	LDFLAGS += -L"C:/allegro/lib"
-	PLATFORM = Windows 
-endif
-
-SRC = $(wildcard $(SRC_DIR)/*.c)
-OBJ = $(SRC:.c=.o)
-TARGET = $(BIN_DIR)/LegendsOfHistory
 all: $(TARGET)
 
-$(TARGET): $(OBJ)
-	@mkdir -p $(BIN_DIR)
-	@echo "Linkando e gerando o executável para $(PLATFORM)..."
-	$(CC) $(OBJ) -o $@ $(LDFLAGS)
-	@echo "Compilação concluída com sucesso!"
+$(TARGET): $(OBJS)
+	@echo "Linkando e gerando o executável..."
+	$(CC) $(OBJS) -o $(TARGET) $(LIBS) $(LDFLAGS)
 
-$(SRC_DIR)/%.o: $(SRC_DIR)/%.c
+src/%.o: src/%.c
 	@echo "Compilando $< ..."
-	$(CC) $(CFLAGS) -c $< -o $@
-
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 clean:
-	@echo "🧹 Limpando arquivos de compilação..."
-	rm -f $(OBJ) $(TARGET)
-	@echo "Limpeza concluída!"
-
-run: $(TARGET)
-	@echo "Executando Legends of History..."
+	@echo "🧹 Limpando arquivos compilados..."
+	rm -f $(OBJS) $(TARGET)
+run: all
+	@echo " Executando o jogo..."
 	./$(TARGET)
-
-
-
-
-
+windows:
+	@echo "Compilando para Windows..."
+	$(CC) $(OBJS) -o $(TARGET).exe $(LIBS)

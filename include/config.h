@@ -16,7 +16,7 @@
 #define T_PORTAL3  4
 #define T_PORTAL4  5
 
-#define PLAYER_SPEED 4.0f
+#define PLAYER_SPEED 0.1f
 #define FPS 60
 
 #define PLAYER_MALE_PATH   "assets/sprites/player_male.png"
