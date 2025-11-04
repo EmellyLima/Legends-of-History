@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <math.h>
 
+// Emilly, porfavor, deixe comentários no seu código. Pleaseeeeee -w- valeu.
+// -- Lucas
+
 void enemy_init(Enemy *enemy, int start_x, int start_y, const char *sprite1, const char *sprite2) {
     enemy->x = start_x;
     enemy->y = start_y;
@@ -29,7 +32,7 @@ void enemy_update(Enemy *enemy, Maze *maze) {
         int new_x = enemy->x + dx;
         int new_y = enemy->y + dy;
 
-        if (!maze_is_wall(maze, new_x, new_y)) {
+        if (maze_is_wall(maze, new_x, new_y)) {
             enemy->x = new_x;
             enemy->y = new_y;
         }
@@ -54,7 +57,7 @@ void enemy_update(Enemy *enemy, Maze *maze) {
 }
 
 void enemy_draw(Enemy *enemy) {
-    float scale = 0.5f; // 👈 reduz tamanho
+    float scale = 1.0f; // 👈 reduz tamanho
     int w = al_get_bitmap_width(enemy->sprite);
     int h = al_get_bitmap_height(enemy->sprite);
     al_draw_scaled_bitmap(enemy->sprite, 0, 0, w, h,

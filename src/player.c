@@ -22,10 +22,12 @@ void player_update(Player *player, Maze *maze, int key_up, int key_down, int key
     int new_x = player->grid_x;
     int new_y = player->grid_y;
 
-    if (key_up)    new_y--;
-    if (key_down)  new_y++;
-    if (key_left)  new_x--;
-    if (key_right) new_x++;
+   int player_vel = 1;
+
+    if (key_up)    new_y -= player_vel;
+    if (key_down)  new_y += player_vel;
+    if (key_left)  new_x -= player_vel;
+    if (key_right) new_x += player_vel;
 
     if (new_x < 0 || new_x >= MAZE_COLS || new_y < 0 || new_y >= MAZE_ROWS)
         return;
@@ -47,7 +49,7 @@ void player_draw(Player *player) {
     float px = MAZE_OFF_X + player->grid_x * MAZE_TILE_W;
     float py = MAZE_OFF_Y + player->grid_y * MAZE_TILE_H;
 
-    float tw = MAZE_TILE_W * 0.8f;  
+    float tw = MAZE_TILE_W * 0.8f;
     float th = MAZE_TILE_H * 0.8f;
     float dx = px + (MAZE_TILE_W - tw) / 2.0f;
     float dy = py + (MAZE_TILE_H - th) / 2.0f;
@@ -73,4 +75,3 @@ void player_destroy(Player *player) {
         player->sprite = NULL;
     }
 }
-

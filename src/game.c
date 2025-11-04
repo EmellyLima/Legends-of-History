@@ -10,13 +10,14 @@ void game_loop(const char *avatar) {
     ALLEGRO_DISPLAY *display = al_create_display(SCREEN_WIDTH, SCREEN_HEIGHT);
     Maze maze;
     maze_load(&maze, 1);
-
+    int player_x = 1;
+    int player_y = 1;
     Player player;
-    player_init(&player, 1, 1, avatar);
+    player_init(&player, player_x, player_y, avatar);
 
-    Enemy enemies[MAX_ENEMIES];
-    enemy_init(&enemies[0], 5, 5, "assets/sprites/knight_1.png", "assets/sprites/knight_1.png");
-    enemy_init(&enemies[1], 15, 8, "assets/sprites/knight_2.png", "assets/sprites/knight_2.png");
+    Enemy enemies[MAX_ENEMIES]; // AVISO: EVITE EM COLOCAR O NÚMERO 5 NA COORD X --Lucas
+    enemy_init(&enemies[0], 15, 7, "assets/sprites/knight_1.png", "assets/sprites/knight_1.png");
+    enemy_init(&enemies[1], 10, 5, "assets/sprites/knight_2.png", "assets/sprites/knight_2.png");
 
     ALLEGRO_EVENT_QUEUE *queue = al_create_event_queue();
     ALLEGRO_TIMER *timer = al_create_timer(1.0 / 60.0);
@@ -62,10 +63,10 @@ void game_loop(const char *avatar) {
 
             // ⚔️ Colisão com inimigos
             for (int i = 0; i < MAX_ENEMIES; i++) {
-                if (fabs(enemies[i].x - player.x) < 0.5f && fabs(enemies[i].y - player.y) < 0.5f) {
+                if ((enemies[i].x - player_x) < 1.0f && (enemies[i].y - player_y) < 1.0f) {
                     al_show_native_message_box(display, "Derrota!", "Você foi atingido!", "Tente novamente!", NULL, ALLEGRO_MESSAGEBOX_WARN);
-                    player.x = 1;
-                    player.y = 1;
+                    player_x = 1;
+                    player_y = 1;
                 }
             }
 

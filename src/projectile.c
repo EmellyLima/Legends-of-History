@@ -2,6 +2,7 @@
 #include "maze.h"
 #include "config.h"
 #include <allegro5/allegro_primitives.h>
+#include <stdbool.h>
 
 void projectile_init(Projectile *p) {
     p->x = 0;
@@ -48,4 +49,5 @@ void projectile_draw(Projectile *p) {
         al_map_rgb(255, 60, 60)
     );
 }
+
 
