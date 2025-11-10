@@ -1,6 +1,12 @@
 #ifndef INTRO_H
 #define INTRO_H
 
-void intro_loop();
+#include <allegro5/allegro.h>
+
+// Mostra o logo inicial do jogo
+void show_logo_screen(ALLEGRO_DISPLAY *display);
+
+// Mostra a tela de explicação 
+void show_intro_screen(ALLEGRO_DISPLAY *display);
 
 #endif

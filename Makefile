@@ -1,32 +1,46 @@
-TARGET = bin/LegendsOfHistory
+# Makefile - Legends of History
+
 CC = gcc
-INCLUDES = -Iinclude -I/opt/homebrew/include -I/opt/homebrew/opt/allegro/include
-CFLAGS = -Wall -g -DALLEGRO_UNSTABLE -DALLEGRO_USE_CONSOLE
-LIBS = -lallegro -lallegro_main -lallegro_primitives -lallegro_image \
-       -lallegro_font -lallegro_ttf -lallegro_audio -lallegro_acodec -lallegro_dialog
+CFLAGS = -Wall -g -DALLEGRO_UNSTABLE -DALLEGRO_USE_CONSOLE \
+	-Iinclude -I/opt/homebrew/include -I/opt/homebrew/opt/allegro/include
 
-# Diretórios de bibliotecas (para macOS / Linux)
-LDFLAGS = -L/opt/homebrew/lib -L/opt/homebrew/opt/allegro/lib
+LDFLAGS = -L/opt/homebrew/lib -L/opt/homebrew/opt/allegro/lib \
+	-lallegro -lallegro_main -lallegro_primitives -lallegro_image \
+	-lallegro_font -lallegro_ttf -lallegro_audio -lallegro_acodec -lallegro_dialog
 
-OBJS = src/avatar_choice.o src/enemy.o src/game.o src/intro.o src/main.o \
-       src/maze.o src/maze1.o src/maze2.o src/maze3.o src/maze4.o src/menu.o \
-       src/player.o src/portal.o src/quiz.o src/sound.o src/projectile.o
+SRC_DIR = src
+BIN_DIR = bin
+OBJ_DIR = $(SRC_DIR)
+
+TARGET = $(BIN_DIR)/LegendsOfHistory
+
+SRC = $(wildcard $(SRC_DIR)/*.c)
+OBJ = $(SRC:.c=.o)
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS)
+$(TARGET): $(OBJ)
 	@echo "Linkando e gerando o executável..."
-	$(CC) $(OBJS) -o $(TARGET) $(LIBS) $(LDFLAGS)
+	@$(CC) $(OBJ) -o $(TARGET) $(LDFLAGS)
+	@echo "Compilação concluída com sucesso."
 
-src/%.o: src/%.c
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@echo "Compilando $< ..."
-	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $@
+
 clean:
-	@echo "🧹 Limpando arquivos compilados..."
-	rm -f $(OBJS) $(TARGET)
+	@echo "Limpando arquivos temporários..."
+	@rm -f $(SRC_DIR)/*.o
+	@rm -f $(TARGET)
+	@echo "Limpeza concluída."
+
 run: all
-	@echo " Executando o jogo..."
-	./$(TARGET)
-windows:
-	@echo "Compilando para Windows..."
-	$(CC) $(OBJS) -o $(TARGET).exe $(LIBS)
+	@echo "Executando Legends of History..."
+	@./$(TARGET)
+
+help:
+	@echo "Comandos disponíveis:"
+	@echo "  make           → Compila todo o projeto"
+	@echo "  make run       → Compila e executa o jogo"
+	@echo "  make clean     → Remove arquivos .o e o binário"
+	@echo "  make help      → Mostra esta ajuda"

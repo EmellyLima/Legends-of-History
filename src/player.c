@@ -1,77 +1,134 @@
 #include "player.h"
-#include "maze.h"
 #include "config.h"
-#include <math.h>
-#include <allegro5/allegro.h>
+#include "maze.h"
+#include "projectile.h"
 #include <allegro5/allegro_primitives.h>
-#include <allegro5/allegro_image.h>
+#include <allegro5/allegro.h>
+#include <math.h>
 #include <stdio.h>
 
-void player_init(Player *player, int start_x, int start_y, const char *sprite_path) {
-    player->grid_x = start_x;
-    player->grid_y = start_y;
-    player->sprite = al_load_bitmap(sprite_path);
-    player->speed = PLAYER_SPEED;
+static const float PLAYER_SIZE = 0.65f;
 
-    if (!player->sprite) {
+void player_init(Player *p, float start_x, float start_y, const char *sprite_path) {
+    p->x = start_x;
+    p->y = start_y;
+    p->speed = 1.8f; // corrigido para não atravessar paredes
+    p->direction = 3;
+    p->lives = 3;
+
+    p->sprite = al_load_bitmap(sprite_path);
+    if (!p->sprite) {
         printf("Erro ao carregar sprite do jogador: %s\n", sprite_path);
     }
+
+    for (int i = 0; i < MAX_PROJECTILES; i++)
+        p->projectiles[i].active = false;
 }
 
-void player_update(Player *player, Maze *maze, int key_up, int key_down, int key_left, int key_right) {
-    int new_x = player->grid_x;
-    int new_y = player->grid_y;
-
-   int player_vel = 1;
-
-    if (key_up)    new_y -= player_vel;
-    if (key_down)  new_y += player_vel;
-    if (key_left)  new_x -= player_vel;
-    if (key_right) new_x += player_vel;
-
-    if (new_x < 0 || new_x >= MAZE_COLS || new_y < 0 || new_y >= MAZE_ROWS)
-        return;
-
-    int tile = maze->data[new_y][new_x];
-
-    if (tile == T_EMPTY || tile == T_FLOOR || (tile >= T_PORTAL1 && tile <= T_PORTAL4)) {
-        player->grid_x = new_x;
-        player->grid_y = new_y;
-    }
-
-    if (tile >= T_PORTAL1 && tile <= T_PORTAL4) {
-        printf("Entrou no portal %d!\n", tile);
-        maze->completed = true;
+void player_destroy(Player *p) {
+    if (p && p->sprite) {
+        al_destroy_bitmap(p->sprite);
+        p->sprite = NULL;
     }
 }
 
-void player_draw(Player *player) {
-    float px = MAZE_OFF_X + player->grid_x * MAZE_TILE_W;
-    float py = MAZE_OFF_Y + player->grid_y * MAZE_TILE_H;
+static bool can_move_to(float nx, float ny, Maze *maze) {
+    int gx = (int)(nx / TILE_SIZE);
+    int gy = (int)(ny / TILE_SIZE);
+    return !maze_is_wall(maze, gx, gy);
+}
 
-    float tw = MAZE_TILE_W * 0.8f;
-    float th = MAZE_TILE_H * 0.8f;
-    float dx = px + (MAZE_TILE_W - tw) / 2.0f;
-    float dy = py + (MAZE_TILE_H - th) / 2.0f;
+void player_update(Player *p, Maze *maze, ALLEGRO_KEYBOARD_STATE *key_state) {
+    if (!p || !maze) return;
 
-    if (player->sprite) {
-        al_draw_scaled_bitmap(player->sprite,
-                              0, 0,
-                              al_get_bitmap_width(player->sprite),
-                              al_get_bitmap_height(player->sprite),
-                              dx, dy, tw, th, 0);
-    } else {
-        al_draw_filled_circle(
-            dx + tw / 2, dy + th / 2,
-            fminf(tw, th) / 2.5f,
-            al_map_rgb(255, 0, 0)
+    float nx = p->x;
+    float ny = p->y;
+
+    if (al_key_down(key_state, ALLEGRO_KEY_UP)) {
+        ny -= p->speed;
+        p->direction = 0;
+    }
+    if (al_key_down(key_state, ALLEGRO_KEY_DOWN)) {
+        ny += p->speed;
+        p->direction = 1;
+    }
+    if (al_key_down(key_state, ALLEGRO_KEY_LEFT)) {
+        nx -= p->speed;
+        p->direction = 2;
+    }
+    if (al_key_down(key_state, ALLEGRO_KEY_RIGHT)) {
+        nx += p->speed;
+        p->direction = 3;
+    }
+
+    // checa colisões
+    if (can_move_to(nx, p->y, maze)) p->x = nx;
+    if (can_move_to(p->x, ny, maze)) p->y = ny;
+
+    // disparo (tecla espaço)
+    static bool space_prev = false;
+    bool space_now = al_key_down(key_state, ALLEGRO_KEY_SPACE);
+    if (space_now && !space_prev) {
+        player_fire(p);
+    }
+    space_prev = space_now;
+
+    // atualiza projéteis
+    for (int i = 0; i < MAX_PROJECTILES; i++)
+        if (p->projectiles[i].active)
+            projectile_update(&p->projectiles[i]);
+}
+
+void player_draw(Player *p) {
+    if (!p) return;
+
+    float sx = MAZE_OFF_X + (p->x / TILE_SIZE) * MAZE_TILE_W;
+    float sy = MAZE_OFF_Y + (p->y / TILE_SIZE) * MAZE_TILE_H;
+    float w  = MAZE_TILE_W * PLAYER_SIZE;
+    float h  = MAZE_TILE_H * PLAYER_SIZE;
+    float dx = sx - w * 0.5f;
+    float dy = sy - h * 0.5f;
+
+    if (p->sprite) {
+        al_draw_scaled_bitmap(
+            p->sprite,
+            0, 0,
+            al_get_bitmap_width(p->sprite),
+            al_get_bitmap_height(p->sprite),
+            dx, dy, w, h,
+            (p->direction == 2 ? ALLEGRO_FLIP_HORIZONTAL : 0)
         );
+    } else {
+        al_draw_filled_rectangle(dx, dy, dx + w, dy + h, al_map_rgb(0, 200, 255));
+    }
+
+    // desenha projéteis
+    for (int i = 0; i < MAX_PROJECTILES; i++)
+        if (p->projectiles[i].active)
+            projectile_draw(&p->projectiles[i]);
+}
+
+void player_fire(Player *p) {
+    for (int i = 0; i < MAX_PROJECTILES; i++) {
+        if (!p->projectiles[i].active) {
+            float ox = p->x, oy = p->y;
+            switch (p->direction) {
+                case 0: oy -= TILE_SIZE * 0.3f; break;
+                case 1: oy += TILE_SIZE * 0.3f; break;
+                case 2: ox -= TILE_SIZE * 0.3f; break;
+                case 3: ox += TILE_SIZE * 0.3f; break;
+            }
+            projectile_fire(&p->projectiles[i], ox, oy, p->direction);
+            break;
+        }
     }
 }
 
-void player_destroy(Player *player) {
-    if (player->sprite) {
-        al_destroy_bitmap(player->sprite);
-        player->sprite = NULL;
+void player_handle_collision(Player *p, float enemy_x, float enemy_y) {
+    float dx = p->x - enemy_x;
+    float dy = p->y - enemy_y;
+    float d2 = dx * dx + dy * dy;
+    if (d2 < (TILE_SIZE * 0.45f) * (TILE_SIZE * 0.45f)) {
+        p->lives--;
     }
 }

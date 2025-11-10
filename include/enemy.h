@@ -2,32 +2,30 @@
 #define ENEMY_H
 
 #include <allegro5/allegro.h>
-#include "config.h"
-#include "maze.h"
+#include <stdbool.h>
 #include "projectile.h"
+#include "maze.h"
+#include "player.h"
 
-#define MAX_PROJECTILES 16
-#define MAX_ENEMIES 2
-
+typedef enum {
+    ENEMY_CHASER,   // inimigo que persegue
+    ENEMY_SHOOTER   // inimigo que atira
+} EnemyType;
 
 typedef struct {
-    int x, y;                 // Posição na grade (em tiles)
-    int move_timer;
-    int fire_timer;
+    float x, y;
+    float speed;
+    int cooldown;
+    EnemyType type;
     ALLEGRO_BITMAP *sprite;
-    ALLEGRO_BITMAP *sprite2;
+
     Projectile projectiles[MAX_PROJECTILES];
+    float fire_delay;   // intervalo entre tiros
+    float fire_timer;   // cronômetro interno de tiro
 } Enemy;
 
-void enemy_init(Enemy *enemy, int start_x, int start_y,
-                const char *sprite1, const char *sprite2);
-
-void enemy_update(Enemy *enemy, Maze *maze);
+void enemy_init(Enemy *enemy, int start_x, int start_y, const char *sprite_path, EnemyType type);
+void enemy_update(Enemy *enemy, Maze *maze, Player *player);  // agora padronizado
 void enemy_draw(Enemy *enemy);
-void enemy_destroy(Enemy *enemy);
 
 #endif
-
-
-
-
