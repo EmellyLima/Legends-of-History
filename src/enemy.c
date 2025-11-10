@@ -5,92 +5,149 @@
 #include <allegro5/allegro_primitives.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-static const float ENEMY_SIZE = 0.65f;
+static const float ENEMY_SIZE = 0.65f; // fator de escala do sprite do inimigo
 
+// Verifica se uma célula do labirinto está livre (sem parede)
+static inline bool cell_free(Maze *maze, int gx, int gy) {
+    return !maze_is_wall(maze, gx, gy);
+}
+
+/*
+ * Inicializa o inimigo com suas propriedades básicas:
+ * - posição inicial (x, y)
+ * - tipo (atirador ou perseguidor)
+ * - sprite (imagem correspondente)
+ * - velocidade levemente aleatória
+ */
 void enemy_init(Enemy *enemy, int start_x, int start_y, const char *sprite_path, EnemyType type) {
-    if (!enemy) return;
-
     enemy->x = start_x;
     enemy->y = start_y;
-    enemy->speed = 1.1f + ((float)(rand() % 20) / 100.0f); // leve variação de velocidade
+    enemy->speed = 2.0f + ((float)(rand() % 50) / 100.0f); // variação entre 2.0 e 2.5
+    enemy->cooldown = 0; // contador que define o tempo entre os tiros
     enemy->type = type;
     enemy->sprite = al_load_bitmap(sprite_path);
 
-    if (!enemy->sprite) {
-        printf("Erro ao carregar sprite do inimigo: %s\n", sprite_path);
-    }
-
-    // controla a frequência de tiro (para atiradores)
-    enemy->cooldown = 0;
-    enemy->fire_delay = 90.0f;  // frames entre tiros (~1.5s a 60 FPS)
-    enemy->fire_timer = 0.0f;   // cronômetro interno
-
-    for (int i = 0; i < MAX_PROJECTILES; i++) {
+    // Desativa todos os projéteis no início
+    for (int i = 0; i < MAX_PROJECTILES; i++)
         enemy->projectiles[i].active = false;
+}
+
+/*
+ * Função de movimentação agressiva:
+ * O inimigo tenta se mover diretamente até o jogador.
+ * Caso encontre uma parede, ele testa ângulos alternativos (em torno da direção principal)
+ * para contornar obstáculos — isso cria um comportamento mais “inteligente” e implacável.
+ */
+static void move_aggressively(Enemy *enemy, Maze *maze, Player *player) {
+    float dx = player->x - enemy->x;
+    float dy = player->y - enemy->y;
+    float dist = sqrtf(dx * dx + dy * dy);
+    if (dist < 1) dist = 1;
+
+    // Velocidade ajustada para perseguição direta
+    float step = enemy->speed * 1.4f;
+    float nx = enemy->x + (dx / dist) * step;
+    float ny = enemy->y + (dy / dist) * step;
+
+    int gx = (int)(nx / TILE_SIZE);
+    int gy = (int)(ny / TILE_SIZE);
+
+    // Move na direção principal se o caminho estiver livre
+    if (cell_free(maze, gx, gy)) {
+        enemy->x = nx;
+        enemy->y = ny;
+    } else {
+        // Se bloqueado, tenta ângulos laterais (busca alternativa)
+        float ang = atan2f(dy, dx);
+        for (int i = -3; i <= 3; i++) {
+            float a = ang + (i * 0.5f); // muda o ângulo gradualmente
+            float tx = enemy->x + cosf(a) * step;
+            float ty = enemy->y + sinf(a) * step;
+            gx = (int)(tx / TILE_SIZE);
+            gy = (int)(ty / TILE_SIZE);
+            if (cell_free(maze, gx, gy)) {
+                enemy->x = tx;
+                enemy->y = ty;
+                break;
+            }
+        }
     }
 }
 
+/*
+ * Atualiza o comportamento de um inimigo a cada frame:
+ * - movimentação (chaser ou shooter)
+ * - ataque (tiro ou contato)
+ * - atualização dos projéteis
+ */
 void enemy_update(Enemy *enemy, Maze *maze, Player *player) {
-    if (!enemy || !player) return;
+    if (!enemy || !maze || !player) return;
+
+    // Movimento constante em direção ao jogador
+    move_aggressively(enemy, maze, player);
 
     float dx = player->x - enemy->x;
     float dy = player->y - enemy->y;
     float dist = sqrtf(dx * dx + dy * dy);
+    if (dist < 1) dist = 1;
 
-    // Movimento básico de perseguição
-    if (dist < TILE_SIZE * 10 && dist > TILE_SIZE * 0.5f) {
-        float step_x = (dx / dist) * enemy->speed;
-        float step_y = (dy / dist) * enemy->speed;
-
-        int gx = (int)((enemy->x + step_x) / TILE_SIZE);
-        int gy = (int)((enemy->y + step_y) / TILE_SIZE);
-
-        if (!maze_is_wall(maze, gx, gy)) {
-            enemy->x += step_x;
-            enemy->y += step_y;
-        }
-    }
-
-    // ATAQUE DOS ATIRADORES
+    /*
+     * COMPORTAMENTO DO ATIRADOR (ENEMY_SHOOTER)
+     * O inimigo detecta o jogador de qualquer distância e atira em intervalos curtos,
+     * mas não constantes — agora há uma pausa maior entre disparos (~0.5s).
+     */
     if (enemy->type == ENEMY_SHOOTER) {
-        enemy->fire_timer += 1.0f; // incrementa o cronômetro a cada frame
+        if (enemy->cooldown > 0)
+            enemy->cooldown--;
 
-        if (dist < TILE_SIZE * 8 && enemy->fire_timer >= enemy->fire_delay) {
+        // Quando cooldown chega a zero, dispara um novo projétil
+        if (enemy->cooldown <= 0) {
             int dir;
+            // Calcula a direção predominante (horizontal ou vertical)
             if (fabsf(dx) > fabsf(dy))
-                dir = (dx > 0) ? 3 : 2; // direita/esquerda
+                dir = (dx > 0) ? 3 : 2; // direita / esquerda
             else
-                dir = (dy > 0) ? 1 : 0; // baixo/cima
+                dir = (dy > 0) ? 1 : 0; // baixo / cima
 
+            // Procura um projétil livre e dispara
             for (int i = 0; i < MAX_PROJECTILES; i++) {
                 if (!enemy->projectiles[i].active) {
-                    float ox = enemy->x;
-                    float oy = enemy->y;
-
-                    switch (dir) {
-                        case 0: oy -= TILE_SIZE * 0.3f; break;
-                        case 1: oy += TILE_SIZE * 0.3f; break;
-                        case 2: ox -= TILE_SIZE * 0.3f; break;
-                        case 3: ox += TILE_SIZE * 0.3f; break;
-                    }
-
-                    projectile_fire(&enemy->projectiles[i], ox, oy, dir);
-                    enemy->fire_timer = 0.0f; // reinicia o cronômetro de tiro
+                    projectile_fire(&enemy->projectiles[i], enemy->x, enemy->y, dir);
                     break;
                 }
             }
+
+            // Recarrega o tempo até o próximo tiro (25–45 frames ≈ 0.5–0.75 segundos)
+            enemy->cooldown = 25 + (rand() % 20);
+        }
+
+    } else {
+        /*
+         * COMPORTAMENTO DO PERSEGUIDOR (ENEMY_CHASER)
+         * Se o inimigo encostar no jogador, causa dano pesado (–3 vidas)
+         * e é levemente empurrado para trás para não ficar travado.
+         */
+        if (dist < TILE_SIZE * 0.7f) {
+            player->lives -= 3;
+            enemy->x -= dx / dist * TILE_SIZE * 0.5f;
+            enemy->y -= dy / dist * TILE_SIZE * 0.5f;
         }
     }
 
-    // ATUALIZA PROJÉTEIS
+    // Atualiza os projéteis disparados (movimento dos tiros ativos)
     for (int i = 0; i < MAX_PROJECTILES; i++) {
-        if (enemy->projectiles[i].active) {
+        if (enemy->projectiles[i].active)
             projectile_update(&enemy->projectiles[i]);
-        }
     }
 }
 
+/*
+ * Desenha o inimigo e seus tiros na tela.
+ * A posição é convertida do sistema do labirinto (grid) para coordenadas de tela.
+ * Se o sprite não estiver disponível, desenha um retângulo colorido de fallback.
+ */
 void enemy_draw(Enemy *enemy) {
     if (!enemy) return;
 
@@ -99,28 +156,20 @@ void enemy_draw(Enemy *enemy) {
     float w = MAZE_TILE_W * ENEMY_SIZE;
     float h = MAZE_TILE_H * ENEMY_SIZE;
 
-    float dx = sx - w * 0.5f;
-    float dy = sy - h * 0.5f;
+    // Desenha o sprite ou um quadrado colorido se não houver imagem
+    if (enemy->sprite)
+        al_draw_scaled_bitmap(enemy->sprite, 0, 0,
+                              al_get_bitmap_width(enemy->sprite),
+                              al_get_bitmap_height(enemy->sprite),
+                              sx - w / 2, sy - h / 2, w, h, 0);
+    else
+        al_draw_filled_rectangle(sx - w / 2, sy - h / 2, sx + w / 2, sy + h / 2,
+                                 (enemy->type == ENEMY_SHOOTER)
+                                     ? al_map_rgb(255, 50, 50)   // vermelho = atirador
+                                     : al_map_rgb(255, 200, 0)); // amarelo = perseguidor
 
-    if (enemy->sprite) {
-        al_draw_scaled_bitmap(
-            enemy->sprite,
-            0, 0,
-            al_get_bitmap_width(enemy->sprite),
-            al_get_bitmap_height(enemy->sprite),
-            dx, dy, w, h, 0
-        );
-    } else {
-        // fallback visual
-        ALLEGRO_COLOR color = (enemy->type == ENEMY_SHOOTER)
-                                ? al_map_rgb(255, 0, 0)
-                                : al_map_rgb(255, 200, 50);
-        al_draw_filled_rectangle(dx, dy, dx + w, dy + h, color);
-    }
-
-    // Desenha projéteis
-    for (int i = 0; i < MAX_PROJECTILES; i++) {
+    // Desenha todos os projéteis ativos
+    for (int i = 0; i < MAX_PROJECTILES; i++)
         if (enemy->projectiles[i].active)
             projectile_draw(&enemy->projectiles[i]);
-    }
 }
