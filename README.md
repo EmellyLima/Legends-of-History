@@ -1,113 +1,87 @@
-# Legends of History
+## Nome do Projeto: **Legends of History**
 
-## Sobre o Jogo
+## Descrição Geral:
+O Legends of History é um jogo educativo 2D desenvolvido em C com a biblioteca Allegro 5, que combina elementos de ação e aprendizado histórico.
+O jogador percorre labirintos, enfrenta inimigos e responde perguntas de História para avançar entre quatro fases de dificuldade crescente.
+Cada fase representa um desafio tanto de agilidade quanto de conhecimento.
 
-**Legends of History** é um jogo educativo e de aventura desenvolvido em **C** utilizando a biblioteca **Allegro 5**.
+## Funcionalidades Principais:
+Tela de menu inicial com opções de Jogar, Regras, Som e Sair
+Escolha de personagem (masculino ou feminino)
+Sistema de nome do jogador
+Quatro fases com labirintos e portais
+Inimigos inteligentes com perseguição e ataques à distância
+Sistema de vidas e pontuação
+Perguntas históricas interativas
+Som e trilha opcional
+Tela final de vitória
 
-O jogador deve percorrer labirintos, atravessar portais e responder perguntas para avançar de fase. O projeto foi desenvolvido como trabalho acadêmico no curso de **Ciência da Computação**, com foco em lógica de programação e desenvolvimento de jogos 2D.
+## Tecnologias Utilizadas
+Linguagem: C
+Biblioteca gráfica: Allegro 5
+Compilador: GCC / Clang
+IDE recomendada: Visual Studio / Code
+Sistema Operacional compatível: Windows, macOS, Linux
 
----
-
-## Estrutura do Projeto
-
-```
+## Pastas do Jogo
 Legends-of-History/
-├── assets/
-│   ├── sprites/
-│   │   ├── player_male.png
-│   │   ├── player_female.png
-│   │   ├── portal_1.png
-│   │   ├── portal_2.png
-│   │   ├── portal_3.png
-│   │   ├── portal_4.png
-│   │   ├── wall.png
-│   │   ├── floor.png
-│   │   └── logo.png
-│   ├── audio/
-│   │   ├── menu_music.ogg
-│   │   └── game_music.ogg
-│   └── fonts/
-│       └── font.ttf
 │
-├── include/
-│   ├── config.h
-│   ├── game.h
-│   ├── maze.h
-│   ├── player.h
-│   └── portal.h
+├── assets/
+│   ├── sprites/         # Sprites dos personagens, inimigos e logotipo
+│   ├── audio/           # Trilha sonora e efeitos sonoros
+│   ├── fonts/           # Fontes utilizadas no jogo
+│   └── quizzes/         # Arquivos de perguntas e respostas
 │
 ├── src/
 │   ├── main.c
 │   ├── game.c
 │   ├── intro.c
-│   ├── menu.c
-│   ├── maze.c
 │   ├── player.c
-│   ├── portal.c
-│   ├── maze1.c
-│   ├── maze2.c
-│   ├── maze3.c
-│   └── maze4.c
+│   ├── enemy.c
+│   ├── maze.c
+│   ├── quiz.c
+│   └── ...
 │
-└── Makefile
-```
+├── include/
+│   ├── game.h
+│   ├── player.h
+│   ├── enemy.h
+│   ├── maze.h
+│   ├── quiz.h
+│   └── ...
+│
+├── Makefile
+└── README.md
 
----
+## Sistemas
 
-## Controles do Jogo
+Como Executar:
+Instale a Allegro 5
 
-| Ação | Tecla |
-|------|--------|
-| Mover para cima | W |
-| Mover para baixo | S |
-| Mover para esquerda | A |
-| Mover para direita | D |
-| Confirmar / Iniciar | Enter |
-| Sair do jogo | Esc |
-
----
-
-## Requisitos
-
-- macOS, Linux ou Windows
-- Biblioteca **Allegro 5** instalada
-
-Para instalar o Allegro no macOS:
-
-```bash
+macOS:
 brew install allegro
-```
 
----
+Linux:
+sudo apt install liballegro5-dev
 
-## Como Compilar e Executar
+Windows:
+Baixe o SDK no site oficial da Allegro.
 
-### Compilar o jogo
-```bash
+Compile o jogo:
 make
-```
 
-### Limpar arquivos objeto
-```bash
-make clean
-```
+Execute:
+make run
 
-### Executar o jogo
-```bash
-./bin/LegendsOfHistory
-```
-
----
+## Objetivo Educacional
+O jogo busca integrar o aprendizado de História com a prática de programação e desenvolvimento de jogos.
+Cada fase foi projetada para relacionar desafios de lógica com temas históricos, tornando o aprendizado mais envolvente e interativo.
 
 ## Créditos
-
-**Autora:** Emelly Lima, Lucas Parisi, Mariana Kajita
+**Autores:** Emelly Lima, Lucas Parisi, Mariana Kajita
 **Curso:** Ciência da Computação  
 **Instituição:** Centro universitário Senac  
 **Período:** 2º semestre
 
----
-
 ## Licença
-
-Projeto de uso acadêmico. Distribuição permitida mediante citação da autora.
+Projeto de uso acadêmico. Distribuição permitida mediante citação dos autores.
