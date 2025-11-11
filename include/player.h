@@ -42,6 +42,12 @@ void player_fire(Player *p);
  */
 void player_handle_collision(Player *p, float enemy_x, float enemy_y);
 
+/**
+ * Libera recursos alocados para o jogador.
+ */
+void player_destroy(Player *p);
+
+
 #endif
 
 

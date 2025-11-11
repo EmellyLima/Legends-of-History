@@ -25,7 +25,7 @@ typedef struct {
 } Enemy;
 
 void enemy_init(Enemy *enemy, int start_x, int start_y, const char *sprite_path, EnemyType type);
-void enemy_update(Enemy *enemy, Maze *maze, Player *player);  // agora padronizado
+void enemy_update(Enemy *enemy, Maze *maze, Player *player, int level);
 void enemy_draw(Enemy *enemy);
 
 #endif

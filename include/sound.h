@@ -2,39 +2,43 @@
 #define SOUND_H
 
 #include <allegro5/allegro_audio.h>
-#include <allegro5/allegro_acodec.h>
 #include <stdbool.h>
 
-/**
- * Inicializa o sistema de áudio (som e música).
- * Deve ser chamado uma vez no início do jogo.
- */
-bool sound_init();
+// -------------------------------------------------------
+// 🎧 SISTEMA DE SOM - Legends of History
+// -------------------------------------------------------
+// Este módulo controla:
+//  • Efeitos sonoros (tiros, portal, dano)
+//  • Música de fundo (opcional)
+//  • Controle de mute global
+// -------------------------------------------------------
 
-/**
- * Carrega um som curto (efeito) — WAV, OGG, MP3.
- */
-ALLEGRO_SAMPLE* load_sound(const char* path);
+// Controle global de som (true = mutado)
+extern bool g_audio_muted;
 
-/**
- * Toca um som curto (efeito) uma vez.
- */
-void play_sound(ALLEGRO_SAMPLE* sample);
+// Sons principais
+extern ALLEGRO_SAMPLE *g_snd_player_shoot;
+extern ALLEGRO_SAMPLE *g_snd_enemy_shoot;
+extern ALLEGRO_SAMPLE *g_snd_portal;
+extern ALLEGRO_SAMPLE *g_snd_lose_life;
 
-/**
- * Carrega e toca uma música de fundo em loop.
- * Retorna o ponteiro do sample tocando.
- */
-ALLEGRO_SAMPLE* play_music_loop(const char* path, float volume);
+// Inicializa o sistema de áudio e carrega todos os sons.
+// Retorna true se o carregamento for bem-sucedido.
+bool sound_init(void);
 
-/**
- * Para a música atual.
- */
-void stop_music(ALLEGRO_SAMPLE* music);
+// Toca um som (exemplo: sound_play(g_snd_player_shoot));
+void sound_play(ALLEGRO_SAMPLE *sample);
 
-/**
- * Finaliza o sistema de som (libera memória).
- */
-void sound_shutdown();
+// Liga/desliga o som (usado no jogo com a tecla 'M').
+void sound_toggle_mute(void);
 
-#endif
+// Libera todos os sons e instâncias de áudio.
+// Deve ser chamada ao sair do jogo.
+void sound_destroy(void);
+
+// --- Funções opcionais para música de fundo ---
+void sound_play_music(void);
+void sound_stop_music(void);
+
+#endif // SOUND_H
+

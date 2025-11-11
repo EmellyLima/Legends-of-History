@@ -2,17 +2,23 @@
 #include "config.h"
 #include "maze.h"
 #include "projectile.h"
+#include "sound.h"
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro.h>
 #include <math.h>
 #include <stdio.h>
 
+// Tamanho do sprite do jogador
 static const float PLAYER_SIZE = 0.65f;
+
+// Variáveis de som globais (definidas em sound.c)
+extern bool g_audio_muted;
+extern ALLEGRO_SAMPLE *g_snd_player_shoot;
 
 void player_init(Player *p, float start_x, float start_y, const char *sprite_path) {
     p->x = start_x;
     p->y = start_y;
-    p->speed = 1.8f; // corrigido para não atravessar paredes
+    p->speed = 1.8f;
     p->direction = 3;
     p->lives = 3;
 
@@ -61,19 +67,19 @@ void player_update(Player *p, Maze *maze, ALLEGRO_KEYBOARD_STATE *key_state) {
         p->direction = 3;
     }
 
-    // checa colisões
     if (can_move_to(nx, p->y, maze)) p->x = nx;
     if (can_move_to(p->x, ny, maze)) p->y = ny;
 
-    // disparo (tecla espaço)
+    // Disparo com ESPAÇO
     static bool space_prev = false;
     bool space_now = al_key_down(key_state, ALLEGRO_KEY_SPACE);
     if (space_now && !space_prev) {
         player_fire(p);
+        if (!g_audio_muted) sound_play(g_snd_player_shoot);
     }
     space_prev = space_now;
 
-    // atualiza projéteis
+    // Atualiza os projéteis ativos
     for (int i = 0; i < MAX_PROJECTILES; i++)
         if (p->projectiles[i].active)
             projectile_update(&p->projectiles[i]);
@@ -102,7 +108,7 @@ void player_draw(Player *p) {
         al_draw_filled_rectangle(dx, dy, dx + w, dy + h, al_map_rgb(0, 200, 255));
     }
 
-    // desenha projéteis
+    // Desenha projéteis ativos
     for (int i = 0; i < MAX_PROJECTILES; i++)
         if (p->projectiles[i].active)
             projectile_draw(&p->projectiles[i]);
