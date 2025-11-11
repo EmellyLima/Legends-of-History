@@ -15,6 +15,7 @@ static const float PLAYER_SIZE = 0.65f;
 extern bool g_audio_muted;
 extern ALLEGRO_SAMPLE *g_snd_player_shoot;
 
+// Inicializa o jogador com posição, velocidade, sprite e vidas
 void player_init(Player *p, float start_x, float start_y, const char *sprite_path) {
     p->x = start_x;
     p->y = start_y;
@@ -44,6 +45,7 @@ static bool can_move_to(float nx, float ny, Maze *maze) {
     return !maze_is_wall(maze, gx, gy);
 }
 
+// Le o teclado e atualiza a posição do jogador
 void player_update(Player *p, Maze *maze, ALLEGRO_KEYBOARD_STATE *key_state) {
     if (!p || !maze) return;
 
@@ -85,6 +87,8 @@ void player_update(Player *p, Maze *maze, ALLEGRO_KEYBOARD_STATE *key_state) {
             projectile_update(&p->projectiles[i]);
 }
 
+
+// Desenha o jogador e seus projéteis
 void player_draw(Player *p) {
     if (!p) return;
 
@@ -114,6 +118,7 @@ void player_draw(Player *p) {
             projectile_draw(&p->projectiles[i]);
 }
 
+// Cria um novo projétil 
 void player_fire(Player *p) {
     for (int i = 0; i < MAX_PROJECTILES; i++) {
         if (!p->projectiles[i].active) {

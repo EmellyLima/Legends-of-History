@@ -7,6 +7,7 @@ float MAZE_TILE_H = TILE_SIZE;
 float MAZE_OFF_X = 0.0f;
 float MAZE_OFF_Y = 0.0f;
 
+// Carrega mapa da fase e texturas
 void maze_load(Maze *maze, int level) {
     maze->wall_img  = al_load_bitmap("assets/sprites/wall.png");
     maze->floor_img = al_load_bitmap("assets/sprites/floor.png");
@@ -34,7 +35,7 @@ void maze_load(Maze *maze, int level) {
 
     maze->completed = false;
 
-    // Calcular centralização e escala apenas uma vez
+    // Calcula centralização e escala apenas uma vez
     ALLEGRO_DISPLAY *display = al_get_current_display();
     if (display) {
         float screen_w = al_get_display_width(display);
@@ -55,6 +56,7 @@ void maze_load(Maze *maze, int level) {
     }
 }
 
+// Desenha o labirinto na tela
 void maze_draw(Maze *maze) {
     for (int y = 0; y < MAZE_ROWS; y++) {
         for (int x = 0; x < MAZE_COLS; x++) {
@@ -112,6 +114,7 @@ void maze_draw(Maze *maze) {
     }
 }
 
+// Impede o jogador de atravessar paredes
 bool maze_is_wall(Maze *maze, int grid_x, int grid_y) {
     if (grid_x < 0 || grid_x >= MAZE_COLS || grid_y < 0 || grid_y >= MAZE_ROWS)
         return true;

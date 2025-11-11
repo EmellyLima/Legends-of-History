@@ -28,7 +28,7 @@
 
 #define PLAYER_MALE_PATH   "assets/sprites/player_male.png"
 #define PLAYER_FEMALE_PATH "assets/sprites/player_female.png"
-#define LOGO_PATH "assets/sprites/logo.png"      // troque pra .jpeg se necessário
+#define LOGO_PATH "assets/sprites/logo.png"      
 #define LABYRINTH_PATH "assets/sprites/labirinto.png"
 
 #endif
