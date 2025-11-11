@@ -159,7 +159,15 @@ void show_intro_screen(ALLEGRO_DISPLAY *display)
                     {
                         show_rules_screen(display, menu_font, title_font);
                         selected = 0; // volta com foco no topo (Jogar)
+
+                        // limpa o estado do teclado e eventos antigos
+                        ALLEGRO_EVENT clear_ev;
+                        while (al_get_next_event(queue, &clear_ev))
+                        {
+                        }
+                        al_rest(0.1); // pequena pausa pra garantir que o ESC não ative o "Jogar"
                     }
+
                     else if (selected == 2)
                     {
                         music_on = !music_on;

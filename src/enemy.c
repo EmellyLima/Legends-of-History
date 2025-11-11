@@ -32,7 +32,7 @@ void enemy_init(Enemy *enemy, int start_x, int start_y, const char *sprite_path,
     enemy->sprite = al_load_bitmap(sprite_path);
 
     if (!enemy->sprite)
-        printf("⚠️ Erro ao carregar sprite do inimigo: %s\n", sprite_path);
+        printf("Erro ao carregar sprite do inimigo: %s\n", sprite_path);
 
     for (int i = 0; i < MAX_PROJECTILES; i++)
         enemy->projectiles[i].active = false;

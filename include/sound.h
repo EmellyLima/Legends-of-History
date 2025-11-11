@@ -21,6 +21,7 @@ extern ALLEGRO_SAMPLE *g_snd_player_shoot;
 extern ALLEGRO_SAMPLE *g_snd_enemy_shoot;
 extern ALLEGRO_SAMPLE *g_snd_portal;
 extern ALLEGRO_SAMPLE *g_snd_lose_life;
+extern ALLEGRO_SAMPLE *g_snd_scroll_open;
 
 // Inicializa o sistema de áudio e carrega todos os sons.
 // Retorna true se o carregamento for bem-sucedido.
