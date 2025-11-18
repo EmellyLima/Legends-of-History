@@ -35,9 +35,10 @@ static void show_intro_scroll(ALLEGRO_FONT *font)
 
     const char *texto =
         "Saudacoes, viajante do tempo!\n\n"
-        "Nos saloes do passado, tu enfrentaras cavaleiros antigos.\n"
+        "Nos labirintos do passado, tu enfrentaras cavaleiros antigos.\n"
         "O dourado te persegue sem descanso; o vermelho atira de longe.\n\n"
         "Move-te com as setas, ataca com ESPACO, pausa com P.\n"
+        "Multe a música com M.\n"
         "Boa sorte em tua jornada.\n\n";
 
     ALLEGRO_EVENT_QUEUE *q = al_create_event_queue();
