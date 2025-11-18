@@ -5,10 +5,12 @@
 #include "projectile.h"
 #include "quiz.h"
 #include "sound.h"
+
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_ttf.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_image.h>
+
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -16,46 +18,42 @@
 #define MAX_ENEMIES 9
 #define MAX_LIVES 5
 
-/* Mantém valor das vidas dentro do intervalo permitido */
+/* Mantém vidas dentro do limite */
 static inline void clamp_lives(Player *p)
 {
-    if (p->lives < 0)
-        p->lives = 0;
-    if (p->lives > MAX_LIVES)
-        p->lives = MAX_LIVES;
+    if (p->lives < 0) p->lives = 0;
+    if (p->lives > MAX_LIVES) p->lives = MAX_LIVES;
 }
 
-/* Tela inicial com texto em pergaminho */
+/* Texto inicial do pergaminho */
 static void show_intro_scroll(ALLEGRO_FONT *font)
 {
     ALLEGRO_BITMAP *scroll = al_load_bitmap("assets/ui/pergaminho.png");
-    if (!scroll)
-        return;
+    if (!scroll) return;
 
     sound_play(g_snd_scroll_open);
 
     const char *texto =
         "Saudacoes, viajante do tempo!\n\n"
-        "Nos labirintos de Legends of History, tua missao e alcancar\n"
-        "o portal sagrado com o maximo de vidas possivel.\n"
-        "Um cavaleiro dourado te persegue de perto e causa grande dano.\n"
-        "Um cavaleiro vermelho ataca a distancia com projeteis.\n\n"
-        "Setas: mover | Espaco: atacar | P: pausar | M: mutar o som\n\n";
+        "Nos saloes do passado, tu enfrentaras cavaleiros antigos.\n"
+        "O dourado te persegue sem descanso; o vermelho atira de longe.\n\n"
+        "Move-te com as setas, ataca com ESPACO, pausa com P.\n"
+        "Boa sorte em tua jornada.\n\n";
 
-    ALLEGRO_EVENT_QUEUE *queue = al_create_event_queue();
-    al_register_event_source(queue, al_get_keyboard_event_source());
+    ALLEGRO_EVENT_QUEUE *q = al_create_event_queue();
+    al_register_event_source(q, al_get_keyboard_event_source());
 
-    double start = al_get_time();
     int visible = 0;
+    double start = al_get_time();
     bool skip = false;
 
-    while (true)
+    while (1)
     {
-        ALLEGRO_EVENT e;
-        if (al_get_next_event(queue, &e))
+        ALLEGRO_EVENT ev;
+        if (al_get_next_event(q, &ev))
         {
-            if (e.type == ALLEGRO_EVENT_KEY_DOWN &&
-                e.keyboard.keycode == ALLEGRO_KEY_ENTER)
+            if (ev.type == ALLEGRO_EVENT_KEY_DOWN &&
+                ev.keyboard.keycode == ALLEGRO_KEY_ENTER)
             {
                 skip = true;
                 break;
@@ -64,25 +62,25 @@ static void show_intro_scroll(ALLEGRO_FONT *font)
 
         al_clear_to_color(al_map_rgb(0, 0, 0));
 
-        int dw = al_get_display_width(al_get_current_display());
-        int dh = al_get_display_height(al_get_current_display());
         int sw = al_get_bitmap_width(scroll);
         int sh = al_get_bitmap_height(scroll);
+        int dw = al_get_display_width(al_get_current_display());
+        int dh = al_get_display_height(al_get_current_display());
 
         al_draw_scaled_bitmap(scroll, 0, 0, sw, sh,
                               100, 60, dw - 200, dh - 120, 0);
 
         visible = (int)((al_get_time() - start) * 15);
-        if (visible > (int)strlen(texto))
+        if (visible > strlen(texto))
             visible = strlen(texto);
 
-        char temp[1024];
-        strncpy(temp, texto, visible);
-        temp[visible] = '\0';
+        char buf[1024];
+        strncpy(buf, texto, visible);
+        buf[visible] = '\0';
 
         al_draw_multiline_text(font, al_map_rgb(40, 25, 10),
                                dw / 2, 250, 700, 28,
-                               ALLEGRO_ALIGN_CENTER, temp);
+                               ALLEGRO_ALIGN_CENTER, buf);
 
         al_flip_display();
         al_rest(0.02);
@@ -91,158 +89,143 @@ static void show_intro_scroll(ALLEGRO_FONT *font)
             break;
     }
 
+    al_destroy_event_queue(q);
     al_destroy_bitmap(scroll);
-    al_destroy_event_queue(queue);
 
     if (!skip)
-        al_rest(0.2);
+        al_rest(0.25);
 }
 
-/* HUD com informações básicas */
+/* HUD com info básica */
 static void draw_hud(ALLEGRO_FONT *font, ALLEGRO_BITMAP *hud,
-                     int vidas, int fase, const char *jogador)
+                     int vidas, int fase, const char *nome)
 {
-    float width = 320, height = 32;
+    float w = 320, h = 32;
 
     if (hud)
     {
         al_draw_tinted_scaled_bitmap(
-            hud, al_map_rgba_f(1, 1, 1, 0.3f), 0, 0,
-            al_get_bitmap_width(hud),
-            al_get_bitmap_height(hud),
-            10, 10, width, height, 0);
+            hud, al_map_rgba_f(1, 1, 1, 0.3f),
+            0, 0, al_get_bitmap_width(hud), al_get_bitmap_height(hud),
+            10, 10, w, h, 0);
     }
     else
     {
-        al_draw_filled_rectangle(10, 10, 10 + width, 10 + height,
+        al_draw_filled_rectangle(10, 10, 10 + w, 10 + h,
                                  al_map_rgba(40, 30, 10, 180));
     }
 
-    float ty = 10 + (height - al_get_font_line_height(font)) * 0.5f;
-    al_draw_textf(font, al_map_rgb(255, 230, 180), 20, ty, 0,
+    float ty = 10 + (h - al_get_font_line_height(font)) / 2;
+
+    al_draw_textf(font, al_map_rgb(255, 230, 180),
+                  20, ty, 0,
                   "Vidas: %d  Fase: %d  Jogador: %s",
-                  vidas, fase, jogador);
+                  vidas, fase, nome);
 }
 
-static void spawn_enemies_for_level(Enemy enemies[MAX_ENEMIES], int level)
+/* Inimigos espalhados */
+static void spawn_enemies_for_level(Enemy e[MAX_ENEMIES], int level)
 {
-    const char *chaserSprite  = "assets/sprites/knight_1.png";
-    const char *shooterSprite = "assets/sprites/knight_2.png";
-
-    float boost = 1.0f + (level - 1) * 0.25f;
+    const char *spr1 = "assets/sprites/knight_1.png";
+    const char *spr2 = "assets/sprites/knight_2.png";
 
     for (int i = 0; i < MAX_ENEMIES; i++)
     {
-        /* Sorteia tipo do inimigo */
-        int r = rand() % 2; 
-        EnemyType type;
-        const char *sprite;
+        EnemyType t = (rand() % 2 == 0 ? ENEMY_CHASER : ENEMY_SHOOTER);
+        const char *sp = (t == ENEMY_CHASER ? spr1 : spr2);
 
-        if (r == 0)
-        {
-            type = ENEMY_CHASER;     /* come-come */
-            sprite = chaserSprite;
-        }
-        else
-        {
-            type = ENEMY_SHOOTER;    /* atirador */
-            sprite = shooterSprite;
-        }
+        int rx, ry;
 
-        /* Posição aleatória válida dentro do labirinto */
-        int rx = (rand() % (MAZE_COLS - 4)) + 2;
-        int ry = (rand() % (MAZE_ROWS - 4)) + 2;
+        do {
+            rx = (rand() % (MAZE_COLS - 4)) + 2;
+            ry = (rand() % (MAZE_ROWS - 4)) + 2;
+        } while (rx == 2 && ry == 2);
 
-        enemy_init(&enemies[i],
-                   rx * TILE_SIZE,
-                   ry * TILE_SIZE,
-                   sprite,
-                   type);
-
-        enemies[i].speed *= boost;
+        enemy_init(&e[i], rx * TILE_SIZE, ry * TILE_SIZE, sp, t);
     }
 }
 
-/* Tela final (morte) */
+/* Tela de game over */
 static void show_game_over(ALLEGRO_FONT *font, const char *player_name)
 {
     al_clear_to_color(al_map_rgb(0, 0, 0));
 
     al_draw_text(font, al_map_rgb(255, 50, 50),
                  640, 300, ALLEGRO_ALIGN_CENTER, "GAME OVER!");
+
     al_draw_textf(font, al_map_rgb(255, 255, 255),
                   640, 360, ALLEGRO_ALIGN_CENTER,
-                  "Boa sorte na proxima, %s!", player_name);
+                  "Boa sorte na próxima, %s!", player_name);
 
     al_draw_text(font, al_map_rgb(180, 180, 180),
                  640, 420, ALLEGRO_ALIGN_CENTER,
-                 "Pressione ENTER para sair...");
+                 "Pressione ENTER...");
 
     al_flip_display();
 
     ALLEGRO_EVENT_QUEUE *q = al_create_event_queue();
     al_register_event_source(q, al_get_keyboard_event_source());
 
-    while (true)
+    ALLEGRO_EVENT ev;
+    while (1)
     {
-        ALLEGRO_EVENT e;
-        al_wait_for_event(q, &e);
-        if (e.type == ALLEGRO_EVENT_KEY_DOWN &&
-            e.keyboard.keycode == ALLEGRO_KEY_ENTER)
+        al_wait_for_event(q, &ev);
+        if (ev.type == ALLEGRO_EVENT_KEY_DOWN &&
+            ev.keyboard.keycode == ALLEGRO_KEY_ENTER)
             break;
     }
 
     al_destroy_event_queue(q);
 }
+
+/* GAME LOOP */
+
 void game_loop(const char *avatar_path, const char *player_name)
 {
-    ALLEGRO_DISPLAY *display = al_get_current_display();
-    if (!display)
-        return;
+    ALLEGRO_DISPLAY *disp = al_get_current_display();
+    if (!disp) return;
 
     ALLEGRO_EVENT_QUEUE *queue = al_create_event_queue();
-    ALLEGRO_TIMER *timer = al_create_timer(1.0 / FPS);
+    ALLEGRO_TIMER *timer = al_create_timer(1.0f / FPS);
 
-    al_register_event_source(queue, al_get_display_event_source(display));
-    al_register_event_source(queue, al_get_timer_event_source(timer));
+    al_register_event_source(queue, al_get_display_event_source(disp));
     al_register_event_source(queue, al_get_keyboard_event_source());
+    al_register_event_source(queue, al_get_timer_event_source(timer));
 
     al_start_timer(timer);
 
     ALLEGRO_FONT *font = al_load_font("assets/fonts/font.ttf", 20, 0);
-    if (!font)
-        font = al_create_builtin_font();
+    if (!font) font = al_create_builtin_font();
 
-    /* Define sprite do jogador */
-    const char *sprite_path = "assets/sprites/player_male.png";
+    ALLEGRO_FONT *font_controls = al_load_font("assets/fonts/font.ttf", 30, 0);
+    if (!font_controls) font_controls = font;
+
+    const char *spr = "assets/sprites/player_male.png";
     if (avatar_path && strstr(avatar_path, "female"))
-        sprite_path = "assets/sprites/player_female.png";
+        spr = "assets/sprites/player_female.png";
 
     Player player;
-    player_init(&player, TILE_SIZE * 2, TILE_SIZE * 2, sprite_path);
-    player.lives = 3;
+    player_init(&player, TILE_SIZE * 2, TILE_SIZE * 2, spr);
+    player.speed = 2.4f;
 
     Maze maze;
-    int current_level = 1;
-    maze_load(&maze, current_level);
+    int level = 1;
+    maze_load(&maze, level);
 
     Enemy enemies[MAX_ENEMIES];
-    spawn_enemies_for_level(enemies, current_level);
+    spawn_enemies_for_level(enemies, level);
 
     QuizBank qb;
     if (!load_quizzes(&qb, "assets/quizzes"))
         qb.count = 0;
 
-    show_intro_scroll(font);
+    ALLEGRO_BITMAP *hud = al_load_bitmap("assets/ui/hud_wood.png");
 
-    ALLEGRO_BITMAP *hud_texture = al_load_bitmap("assets/ui/hud_wood.png");
+    show_intro_scroll(font);
 
     bool running = true;
     bool paused = false;
-
-    /* Controle de bônus por fase */
-    bool bonusGivenThisLevel = false;
-    bool quizBonusAllowed = false;
+    bool gotKillBonus = false;
 
     int meleeCooldown = 0;
 
@@ -252,69 +235,63 @@ void game_loop(const char *avatar_path, const char *player_name)
     {
         al_wait_for_event(queue, &ev);
 
-        /* Fechar pelo X */
         if (ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
-            running = false;
+            return;
 
-        /* Pressionar tecla */
         if (ev.type == ALLEGRO_EVENT_KEY_DOWN)
         {
             if (ev.keyboard.keycode == ALLEGRO_KEY_P)
                 paused = !paused;
 
-            else if (ev.keyboard.keycode == ALLEGRO_KEY_M)
+            if (ev.keyboard.keycode == ALLEGRO_KEY_M)
                 sound_toggle_mute();
 
-            else if (ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
-            {
-                /* Sai do jogo completamente */
-                return;
-            }
+            if (ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
+                return; /* voltar ao menu */
         }
 
-        /* Tela de pausa */
+
         if (paused)
         {
             al_clear_to_color(al_map_rgb(0, 0, 0));
             al_draw_text(font, al_map_rgb(255, 255, 120),
                          640, 360, ALLEGRO_ALIGN_CENTER,
-                         "JOGO PAUSADO (P para continuar)");
+                         "PAUSADO (P para voltar)");
             al_flip_display();
             continue;
         }
 
-        /* Atualizações por timer */
+
         if (ev.type == ALLEGRO_EVENT_TIMER)
         {
             if (meleeCooldown > 0)
                 meleeCooldown--;
 
-            ALLEGRO_KEYBOARD_STATE key_state;
-            al_get_keyboard_state(&key_state);
-            player_update(&player, &maze, &key_state);
+            /* Movimento */
+            ALLEGRO_KEYBOARD_STATE ks;
+            al_get_keyboard_state(&ks);
+            player_update(&player, &maze, &ks);
+
+            /* Inimigos */
 
             for (int i = 0; i < MAX_ENEMIES; i++)
-            {
                 if (enemies[i].x >= 0)
-                    enemy_update(&enemies[i], &maze, &player, current_level);
-            }
+                    enemy_update(&enemies[i], &maze, &player, level);
 
-            /* Projéteis do player acertam inimigos */
+            /* Projéteis do player */
             for (int i = 0; i < MAX_ENEMIES; i++)
             {
-                if (enemies[i].x < 0)
-                    continue;
+                if (enemies[i].x < 0) continue;
 
                 for (int j = 0; j < MAX_PROJECTILES; j++)
                 {
                     Projectile *p = &player.projectiles[j];
-                    if (!p->active)
-                        continue;
+                    if (!p->active) continue;
 
                     float dx = p->x - enemies[i].x;
                     float dy = p->y - enemies[i].y;
 
-                    if ((dx * dx + dy * dy) < (TILE_SIZE * 0.5f) * (TILE_SIZE * 0.5f))
+                    if (dx*dx + dy*dy < (TILE_SIZE*0.5f)*(TILE_SIZE*0.5f))
                     {
                         enemies[i].x = -9999;
                         enemies[i].y = -9999;
@@ -323,84 +300,73 @@ void game_loop(const char *avatar_path, const char *player_name)
                 }
             }
 
-            /* Projéteis inimigos acertam jogador */
+            /* Projéteis inimigos */
             for (int i = 0; i < MAX_ENEMIES; i++)
             {
                 for (int j = 0; j < MAX_PROJECTILES; j++)
                 {
                     Projectile *p = &enemies[i].projectiles[j];
-                    if (!p->active)
-                        continue;
+                    if (!p->active) continue;
 
                     float dx = p->x - player.x;
                     float dy = p->y - player.y;
 
-                    if ((dx * dx + dy * dy) < (TILE_SIZE * 0.4f) * (TILE_SIZE * 0.4f))
+                    if (dx*dx + dy*dy < (TILE_SIZE*0.4f)*(TILE_SIZE*0.4f))
                     {
                         p->active = false;
-                        player.lives -= 1;
+                        player.lives--;
                         clamp_lives(&player);
                         sound_play(g_snd_lose_life);
 
                         if (player.lives <= 0)
-                        {
                             running = false;
-                            break;
-                        }
                     }
                 }
             }
-            /* Dano corpo a corpo do chaser (com cooldown) */
+
+            /* Dano corpo a corpo */
             for (int i = 0; i < MAX_ENEMIES; i++)
             {
-                if (enemies[i].type == ENEMY_CHASER && enemies[i].x > 0)
+                if (enemies[i].type != ENEMY_CHASER) continue;
+                if (enemies[i].x < 0) continue;
+
+                float dx = player.x - enemies[i].x;
+                float dy = player.y - enemies[i].y;
+
+                if (dx*dx + dy*dy < (TILE_SIZE*0.62f)*(TILE_SIZE*0.62f))
                 {
-                    float dx = player.x - enemies[i].x;
-                    float dy = player.y - enemies[i].y;
-
-                    if ((dx * dx + dy * dy) < (TILE_SIZE * 0.6f) * (TILE_SIZE * 0.6f))
+                    if (meleeCooldown == 0)
                     {
-                        if (meleeCooldown == 0)
-                        {
-                            player.lives -= 2;
-                            clamp_lives(&player);
-                            meleeCooldown = 45;
-                            sound_play(g_snd_lose_life);
+                        player.lives -= 2;
+                        clamp_lives(&player);
 
-                            if (player.lives <= 0)
-                            {
-                                running = false;
-                                break;
-                            }
-                        }
+                        meleeCooldown = 45;
+                        sound_play(g_snd_lose_life);
+
+                        if (player.lives <= 0)
+                            running = false;
                     }
                 }
             }
 
-            /* Verifica se todos inimigos morreram */
+            /* Matou todos */
             bool allDead = true;
             for (int i = 0; i < MAX_ENEMIES; i++)
-            {
                 if (enemies[i].x > 0)
-                {
                     allDead = false;
-                    break;
-                }
-            }
 
-            /* Bonus de matar todos (1 por fase) */
-            if (allDead && !bonusGivenThisLevel)
+            if (allDead && !gotKillBonus)
             {
                 if (player.lives < MAX_LIVES)
                     player.lives++;
 
                 clamp_lives(&player);
-                bonusGivenThisLevel = true;
+                gotKillBonus = true;
             }
 
-            /* Portal e quiz */
-            int px = (int)(player.x / TILE_SIZE);
-            int py = (int)(player.y / TILE_SIZE);
+            /* Portal / quiz */
+            int px = player.x / TILE_SIZE;
+            int py = player.y / TILE_SIZE;
 
             for (int dy = -1; dy <= 1; dy++)
             {
@@ -417,55 +383,42 @@ void game_loop(const char *avatar_path, const char *player_name)
                     if (tile >= T_PORTAL1 && tile <= T_PORTAL4)
                     {
                         al_stop_timer(timer);
+
                         sound_play(g_snd_portal);
 
                         bool acertou = true;
-
                         if (qb.count > 0)
-                            acertou = show_quiz_for_level(display, &qb, current_level);
+                            acertou = show_quiz_for_level(disp, &qb, level);
 
-                        /* Se acertou, pode receber bonus da fase */
                         if (acertou)
                         {
-                            quizBonusAllowed = true;
-                            current_level++;
+                            /* vida do portal */
+                            if (player.lives < MAX_LIVES)
+                                player.lives++;
+
+                            clamp_lives(&player);
+                            level++;
                         }
                         else
                         {
-                            quizBonusAllowed = false;
-                            if (current_level > 1)
-                                current_level--;
+                            if (level > 1)
+                                level--;
                         }
 
-                        /* Final do jogo */
-                        if (current_level > 4)
+                        if (level > 4)
                         {
                             running = false;
                         }
                         else
                         {
                             maze_unload(&maze);
-                            maze_load(&maze, current_level);
-                            spawn_enemies_for_level(enemies, current_level);
+                            maze_load(&maze, level);
+                            spawn_enemies_for_level(enemies, level);
 
                             player.x = TILE_SIZE * 2;
                             player.y = TILE_SIZE * 2;
 
-                            /* Bonus por passar de fase:
-                               só se acertou o quiz E
-                               não ganhou bonus matando todos */
-                            if (quizBonusAllowed && !bonusGivenThisLevel)
-                            {
-                                if (player.lives < MAX_LIVES)
-                                    player.lives++;
-
-                                clamp_lives(&player);
-                            }
-
-                            /* reseta bonus para próxima fase */
-                            bonusGivenThisLevel = false;
-                            quizBonusAllowed = false;
-
+                            gotKillBonus = false;
                             meleeCooldown = 40;
                         }
 
@@ -474,39 +427,66 @@ void game_loop(const char *avatar_path, const char *player_name)
                 }
             }
 
-            /* Desenho do jogo */
+            /* Desenho */
             al_clear_to_color(al_map_rgb(0, 0, 0));
+
             maze_draw(&maze);
             player_draw(&player);
 
             for (int i = 0; i < MAX_ENEMIES; i++)
-            {
                 if (enemies[i].x > 0)
                     enemy_draw(&enemies[i]);
-            }
 
-            draw_hud(font, hud_texture, player.lives, current_level, player_name);
+            draw_hud(font, hud, player.lives, level, player_name);
+
+            /* CONTROLES (lado direito, fonte grande)*/
+
+            int fim_labirinto = MAZE_OFF_X + MAZE_COLS * MAZE_TILE_W;
+            int espaço_preto = al_get_display_width(disp) - fim_labirinto;
+
+            int cx = fim_labirinto + espaço_preto * 0.22;
+            int cy = 150;
+
+            ALLEGRO_COLOR ctrl_color = al_map_rgb(255, 255, 200);
+
+            al_draw_text(font_controls, ctrl_color, cx, cy, 0, "CONTROLES");
+            cy += 55;
+
+            al_draw_text(font_controls, ctrl_color, cx, cy, 0, "   ↑");
+            cy += 45;
+
+            al_draw_text(font_controls, ctrl_color, cx, cy, 0, "← + →   Mov");
+            cy += 45;
+
+            al_draw_text(font_controls, ctrl_color, cx, cy, 0, "   ↓");
+            cy += 65;
+
+            al_draw_text(font_controls, ctrl_color, cx, cy, 0, "[ESP]  Atacar");
+            cy += 55;
+
+            al_draw_text(font_controls, ctrl_color, cx, cy, 0, "[P]    Pausa");
+            cy += 55;
+
+            al_draw_text(font_controls, ctrl_color, cx, cy, 0, "[M]    Mudo");
+
             al_flip_display();
         }
     }
 
-    /* Tela final caso morra */
+    /* Morreu */
     if (player.lives <= 0)
         show_game_over(font, player_name);
-    /* Liberação de recursos */
+
+    /* Liberações */
     free_quizzes(&qb);
     maze_unload(&maze);
 
-    if (hud_texture)
-        al_destroy_bitmap(hud_texture);
-
-    if (font)
-        al_destroy_font(font);
-
-    if (timer)
-        al_destroy_timer(timer);
-
-    if (queue)
-        al_destroy_event_queue(queue);
+    if (hud) al_destroy_bitmap(hud);
+    if (font_controls && font_controls != font)
+        al_destroy_font(font_controls);
+    if (font) al_destroy_font(font);
+    if (timer) al_destroy_timer(timer);
+    if (queue) al_destroy_event_queue(queue);
 }
-/* Fim do arquivo game.c */
+
+/* FIM */

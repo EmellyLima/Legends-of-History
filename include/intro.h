@@ -7,6 +7,6 @@
 void show_logo_screen(ALLEGRO_DISPLAY *display);
 
 // Mostra a tela de explicação 
-void show_intro_screen(ALLEGRO_DISPLAY *display);
+bool show_intro_screen(ALLEGRO_DISPLAY *display);
 
 #endif
