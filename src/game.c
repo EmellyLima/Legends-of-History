@@ -489,5 +489,3 @@ void game_loop(const char *avatar_path, const char *player_name)
     if (timer) al_destroy_timer(timer);
     if (queue) al_destroy_event_queue(queue);
 }
-
-/* FIM */
