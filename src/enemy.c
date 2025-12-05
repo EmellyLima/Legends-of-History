@@ -85,7 +85,7 @@ void enemy_update(Enemy *e, Maze *maze, Player *p, int level) {
     /* Velocidade aumenta muito pouco por fase */
     e->speed = 1.4f + (level * 0.15f);
 
-    /* --------- ATIRADOR --------- */
+    /* ATIRADOR */
     if (e->type == ENEMY_SHOOTER) {
         if (e->cooldown > 0)
             e->cooldown--;
