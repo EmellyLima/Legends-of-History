@@ -121,7 +121,7 @@ bool maze_is_wall(Maze *maze, int grid_x, int grid_y) {
     return maze->data[grid_y][grid_x] == T_WALL;
 }
 
-/* =======  PORTAL / TILE UTILS ======= */
+/* PORTAL / TILE UTILS */
 int maze_tile_at(Maze *maze, float world_x, float world_y) {
     int gx = (int)(world_x / TILE_SIZE);
     int gy = (int)(world_y / TILE_SIZE);
